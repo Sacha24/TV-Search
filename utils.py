@@ -9,6 +9,6 @@ def getVersion():
 
 def getJsonFromFile(showName):
     try:
-        return template("{folder}/{filename}.json".format(folder=JSON_FOLDER, filename=showName))
+        return json.loads(template("{folder}/{filename}.json".format(folder=JSON_FOLDER, filename=showName)))
     except:
         return "{}"

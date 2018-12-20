@@ -1,22 +1,7 @@
 import os
-from bottle import get, post, redirect, request, route, run, static_file, template, error
+from bottle import get, post, redirect, request, route, run, static_file, template, error, response
 import utils
 import json
-
-
-data = {
-    "result": []
-}
-
-
-def load_data():
-    AVAILABE_SHOWS = utils.AVAILABE_SHOWS
-    for show in AVAILABE_SHOWS:
-        showName = show
-        show_info = utils.getJsonFromFile(showName)
-        show_info = json.loads(show_info)
-        data["result"].append(show_info)
-        data["result"].sort(key=lambda x: x["name"])
 
 # Static Routes
 
@@ -48,9 +33,29 @@ def handle_root_url():
 
 
 @route('/browse')
-def browse():
+def load_shows():
+    list_shows = [utils.getJsonFromFile(id) for id in utils.AVAILABE_SHOWS]
+    list_shows.sort(key=lambda x: x["name"])
     sectionTemplate = "./templates/browse.tpl"
-    return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=data["result"])
+    return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=list_shows)
+
+
+@route('/show/<show_id>')
+def browse_show(show_id):
+    show = utils.getJsonFromFile(int(show_id))
+    if any(show):
+        sectionTemplate = "./templates/show.tpl"
+        return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=show)
+    else:
+        response.status = 404
+        sectionTemplate = "./templates/404.tpl"
+        return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=show)
+
+
+@route('/ajax/show/<show_id>')
+def browse_show(show_id):
+    show = utils.getJsonFromFile(int(show_id))
+    return template("./templates/show.tpl", result=show)
 
 
 @route('/search')
@@ -66,7 +71,6 @@ def error404(error):
 
 
 def main():
-    load_data()
     run(host='localhost', port=os.environ.get('PORT', 7005))
 
 
