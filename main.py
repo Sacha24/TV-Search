@@ -58,6 +58,27 @@ def browse_show(show_id):
     return template("./templates/show.tpl", result=show)
 
 
+@route('/show/<show_id>/episode/<episode_id>')
+def show_episode(show_id, episode_id):
+    show = utils.getJsonFromFile(int(show_id))
+    for episode in show['_embedded']['episodes']:
+        if episode["id"] == int(episode_id):
+            sectionTemplate = "./templates/episode.tpl"
+            return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=episode)
+        else:
+            response.status = 404
+            sectionTemplate = "./templates/404.tpl"
+            return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=episode)
+
+
+@route('/ajax/show/<show_id>/episode/<episode_id>')
+def show_episode(show_id, episode_id):
+    show = utils.getJsonFromFile(int(show_id))
+    for episode in show['_embedded']['episodes']:
+        if episode["id"] == int(episode_id):
+            return template("./templates/episode.tpl", result=episode)
+
+
 @route('/search')
 def search():
     sectionTemplate = "./templates/search.tpl"
