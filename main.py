@@ -1,5 +1,5 @@
+from bottle import error, get, post, redirect, request, response, route, run, static_file, template
 import os
-from bottle import get, post, redirect, request, route, run, static_file, template, error, response
 import utils
 
 
@@ -30,13 +30,23 @@ def handle_root_url():
     redirect("/home")
 
 
-@route('/browse')
-def load_shows():
-    list_shows = [utils.getJsonFromFile(id) for id in utils.AVAILABE_SHOWS]
-    list_shows.sort(key=lambda x: x["name"])
+@route('/browse/<order>')
+def load_shows(order):
+    list_shows = [utils.getJsonFromFile(show_id) for show_id in utils.AVAILABE_SHOWS]
+    if order == "name":
+        list_shows.sort(key=lambda x: x["name"])
+    elif order == "ratings":
+        list_shows.sort(key=lambda x: x["rating"]["average"], reverse=True)
+    else:
+        list_shows.sort(key=lambda x: x["name"])
     sectionTemplate = "./templates/browse.tpl"
     return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate,
                     sectionData=list_shows)
+
+
+@route('/browse')
+def handle_root_url():
+    redirect("/browse/name")
 
 
 @route('/show/<show_id>')
