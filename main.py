@@ -5,7 +5,6 @@ import json
 
 # Static Routes
 
-
 @get("/js/<filepath:re:.*\.js>")
 def js(filepath):
     return static_file(filepath, root="./js")
@@ -37,7 +36,8 @@ def load_shows():
     list_shows = [utils.getJsonFromFile(id) for id in utils.AVAILABE_SHOWS]
     list_shows.sort(key=lambda x: x["name"])
     sectionTemplate = "./templates/browse.tpl"
-    return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=list_shows)
+    return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate,
+                    sectionData=list_shows)
 
 
 @route('/show/<show_id>')
@@ -45,11 +45,13 @@ def browse_show(show_id):
     show = utils.getJsonFromFile(int(show_id))
     if any(show):
         sectionTemplate = "./templates/show.tpl"
-        return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=show)
+        return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate,
+                        sectionData=show)
     else:
         response.status = 404
         sectionTemplate = "./templates/404.tpl"
-        return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=show)
+        return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate,
+                        sectionData=show)
 
 
 @route('/ajax/show/<show_id>')
@@ -64,11 +66,13 @@ def show_episode(show_id, episode_id):
     for episode in show['_embedded']['episodes']:
         if episode["id"] == int(episode_id):
             sectionTemplate = "./templates/episode.tpl"
-            return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=episode)
+            return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate,
+                            sectionData=episode)
         else:
             response.status = 404
             sectionTemplate = "./templates/404.tpl"
-            return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData=episode)
+            return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate,
+                            sectionData=episode)
 
 
 @route('/ajax/show/<show_id>/episode/<episode_id>')
@@ -83,6 +87,37 @@ def show_episode(show_id, episode_id):
 def search():
     sectionTemplate = "./templates/search.tpl"
     return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData={})
+
+
+@route('/search', method="POST")
+def search_result():
+    sectionTemplate = "./templates/search_result.tpl"
+    query = request.forms.get('q')
+
+    result = []
+    list_shows = [utils.getJsonFromFile(id) for id in utils.AVAILABE_SHOWS]
+    i = 0
+
+    for show in list_shows:
+        if query in show["name"]:
+            while i <= len(show["_embedded"]["episodes"])-1:
+                show_result = {}
+                show_result["showid"] = show["id"]
+                show_result["episodeid"] = show["_embedded"]["episodes"][i]["id"]
+                show_result["text"] = show["name"] + ": " + show["_embedded"]["episodes"][i]["name"]
+                result.append(show_result)
+                i += 1
+        for episode in show["_embedded"]["episodes"]:
+            if query in episode["name"] or (episode["summary"] is not None and query in episode["summary"]):
+                episode_result = {}
+                episode_result["episodeid"] = episode["id"]
+                episode_result["showid"] = show["id"]
+                episode_result["text"] = show["name"] + ": " + episode["name"]
+                result.append(episode_result)
+
+    result.sort(key=lambda x: x["text"])
+    return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, query=query,
+                    sectionData={}, results=result)
 
 
 @error(404)
