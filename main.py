@@ -1,10 +1,9 @@
 import os
 from bottle import get, post, redirect, request, route, run, static_file, template, error, response
 import utils
-import json
+
 
 # Static Routes
-
 @get("/js/<filepath:re:.*\.js>")
 def js(filepath):
     return static_file(filepath, root="./js")
@@ -89,30 +88,28 @@ def search():
     return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate, sectionData={})
 
 
-@route('/search', method="POST")
+@post('/search')
 def search_result():
     sectionTemplate = "./templates/search_result.tpl"
     query = request.forms.get('q')
 
     result = []
     list_shows = [utils.getJsonFromFile(id) for id in utils.AVAILABE_SHOWS]
-    i = 0
+    # i = 0
 
     for show in list_shows:
-        if query in show["name"]:
-            while i <= len(show["_embedded"]["episodes"])-1:
-                show_result = {}
-                show_result["showid"] = show["id"]
-                show_result["episodeid"] = show["_embedded"]["episodes"][i]["id"]
-                show_result["text"] = show["name"] + ": " + show["_embedded"]["episodes"][i]["name"]
-                result.append(show_result)
-                i += 1
+        # search functionality according the name of the show
+
+        # if query in show["name"]:
+        #   while i <= len(show["_embedded"]["episodes"])-1:
+        #       show_result = {"showid": show["id"], "episodeid": show["_embedded"]["episodes"][i]["id"],
+        #                      "text": show["name"] + ": " + show["_embedded"]["episodes"][i]["name"]}
+        #       result.append(show_result)
+        #       i += 1
         for episode in show["_embedded"]["episodes"]:
             if query in episode["name"] or (episode["summary"] is not None and query in episode["summary"]):
-                episode_result = {}
-                episode_result["episodeid"] = episode["id"]
-                episode_result["showid"] = show["id"]
-                episode_result["text"] = show["name"] + ": " + episode["name"]
+                episode_result = {"showid": show["id"], "episodeid": episode["id"],
+                                  "text": show["name"] + ": " + episode["name"]}
                 result.append(episode_result)
 
     result.sort(key=lambda x: x["text"])
@@ -127,7 +124,8 @@ def error404(error):
 
 
 def main():
-    run(host='localhost', port=os.environ.get('PORT', 7005))
+    run(host='localhost', port=os.environ.get('PORT', 7000))
+    # run(host='0.0.0.0', port=os.environ.get('PORT', 5000))
 
 
 if __name__ == "__main__":
