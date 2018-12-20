@@ -35,10 +35,8 @@ def load_shows(order):
     list_shows = [utils.getJsonFromFile(show_id) for show_id in utils.AVAILABE_SHOWS]
     if order == "name":
         list_shows.sort(key=lambda x: x["name"])
-    elif order == "ratings":
+    if order == "ratings":
         list_shows.sort(key=lambda x: x["rating"]["average"], reverse=True)
-    else:
-        list_shows.sort(key=lambda x: x["name"])
     sectionTemplate = "./templates/browse.tpl"
     return template("./pages/index.html", version=utils.getVersion(), sectionTemplate=sectionTemplate,
                     sectionData=list_shows)
